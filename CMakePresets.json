@@ -1,0 +1,63 @@
+{
+	"version": 3,
+	"cmakeMinimumRequired": {
+		"major": 3,
+		"minor": 21,
+		"patch": 0
+	},
+	"configurePresets": [
+		{
+			"name": "base",
+			"hidden": true,
+			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/build/",
+			"cacheVariables": {
+				"CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+				"CMAKE_C_COMPILER": "/home/jeremy/.pico-sdk/toolchain/15_2_Rel1/bin/arm-none-eabi-gcc",
+				"CMAKE_CXX_COMPILER": "/home/jeremy/.pico-sdk/toolchain/15_2_Rel1/bin/arm-none-eabi-g++",
+				"Python3_EXECUTABLE": "/bin/python"
+			}
+		},
+		{
+			"name": "debug",
+			"displayName": "Debug Build",
+			"description": "Full debugging symbols (-g), optimizations disabled",
+			"inherits": "base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug"
+			}
+		},
+		{
+			"name": "release",
+			"displayName": "Release (Max Speed)",
+			"description": "Maximum execution speed optimization (-O3)",
+			"inherits": "base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		},
+		{
+			"name": "minsize",
+			"displayName": "Release (Min Size)",
+			"description": "Optimized for smallest binary flash footprint (-Os)",
+			"inherits": "base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "MinSizeRel"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "debug",
+			"configurePreset": "debug"
+		},
+		{
+			"name": "release",
+			"configurePreset": "release"
+		},
+		{
+			"name": "minsize",
+			"configurePreset": "minsize"
+		}
+	]
+}
