@@ -23,7 +23,8 @@ if (EXISTS ${picoVscode})
 	include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico2 CACHE STRING "Board type")
+# set(PICO_BOARD pico2 CACHE STRING "Board type")
+set(PICO_BOARD pimoroni_pico_plus2_w_rp2350 CACHE STRING "Board type")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
@@ -33,9 +34,11 @@ project(pico-rig C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-# Add executable. Default name is the project name, version 0.1
+# Automatically find all .cpp files inside the src directory tree
+file(GLOB_RECURSE SRC_FILES "src/*.cpp")
 
-add_executable(pico-rig pico-rig.cpp )
+# Add executable. Default name is the project name, version 0.1
+add_executable(pico-rig ${SRC_FILES} )
 
 pico_set_program_name(pico-rig "pico-rig")
 pico_set_program_version(pico-rig "0.1")
@@ -46,11 +49,13 @@ pico_enable_stdio_usb(pico-rig 1)
 
 # Add the standard library to the build
 target_link_libraries(pico-rig
-	pico_stdlib)
+	pico_stdlib
+	hardware_psram
+)
 
 # Add the standard include files to the build
 target_include_directories(pico-rig PRIVATE
-	${CMAKE_CURRENT_LIST_DIR}
+	${CMAKE_CURRENT_LIST_DIR}/include
 )
 
 pico_add_extra_outputs(pico-rig)

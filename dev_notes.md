@@ -39,7 +39,18 @@ cmake --build --preset minsize
 
 ## 2. Flashing & Uploading Firmware
 
-Use OpenOCD via CMSIS-DAP Debug Probe to flash the `.elf` binary to the rp2350.
+Using picotool to flash directly:
+
+| Action | Command & Flags | When to Use / Prerequisite |
+| :--- | :--- | :--- |
+| **Inspect Board/File** | `picotool info -a` | Check details, memory allocation, and pins. |
+| **Flash & Run File** | `picotool load <file.uf2> -x` | `-x` reboots the board to execute the code immediately. |
+| **Hands-Free Flash** | `picotool load -f <file.uf2> -x` | `-f` forces a running Pico with USB serial into BOOTSEL mode. |
+| **Verify Memory** | `picotool verify <file.uf2>` | Compares device memory against a local file. |
+| **Backup Memory** | `picotool save -a <output.uf2>` | `-a` saves the entire active flash area to your computer. |
+| **Force Reboot** | `picotool reboot` | Safely reboots the board into normal runtime execution. |
+
+Using OpenOCD via CMSIS-DAP Debug Probe to flash the `.elf` binary to the rp2350.
 
 ```bash
 sudo ~/.pico-sdk/openocd/0.12.0+dev/openocd -f interface/cmsis-dap.cfg -f target/rp2350.cfg -c "adapter speed 5000" -c "program build/your_project.elf verify reset exit"
