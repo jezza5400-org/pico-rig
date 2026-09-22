@@ -139,7 +139,7 @@ extern "C" uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
 // ====================================================================
 char const *string_desc_arr[] = {
 	(const char[]){0x09, 0x04},
-	"Jeremy",
+	"Not Jeremy",
 	"Pico-Rig Sound Card",
 	"123456",
 	"Pico-Rig Serial Port",
