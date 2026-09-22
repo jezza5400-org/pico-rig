@@ -3,6 +3,8 @@
 #include <cmath>
 #include "pico/stdlib.h"
 
+uint8_t rx_audio[96];
+
 void usb_serial_write(const char* str)
 {
 	if (!tud_cdc_connected())
@@ -15,21 +17,9 @@ void usb_serial_write(const char* str)
 	tud_cdc_write_flush();
 }
 
-int main()
+void process_audio() 
 {
-	tusb_init();
-	
-	const int led_pin = 0;
-
-	gpio_init(led_pin);
-	gpio_set_dir(led_pin, GPIO_OUT);
-	
-	uint8_t rx_audio[96];
-
-	while (true)
-	{
-		tud_task();
-		// PC -> Pico / radio TX audio
+			// PC -> Pico / radio TX audio
 		if (usb_audio_out_streaming())
 		{
 			uint16_t count =
@@ -43,14 +33,7 @@ int main()
 				for (uint16_t i = 0; i < count; ++i)
 				{
 					if(rx_audio[i] > 128)
-					{
-						usb_serial_write("Received audio data from");
-						gpio_put(led_pin, true);
-					}
-					else
-					{
-						gpio_put(led_pin, false);
-					}
+						usb_serial_write("[AUDIO]: HIGH\n");
 				}
 			}
 		}
@@ -73,5 +56,17 @@ int main()
 				tx_audio,
 				sizeof(tx_audio));
 		}
+
+}
+
+int main()
+{
+	tusb_init();
+
+	while (true)
+	{
+		tud_task();
+
+		process_audio();
 	}
 }
