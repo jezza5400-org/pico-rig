@@ -26,6 +26,9 @@ endif()
 # set(PICO_BOARD pico2 CACHE STRING "Board type")
 set(PICO_BOARD pimoroni_pico_plus2_w_rp2350 CACHE STRING "Board type")
 
+# Use latest TinyUSB
+set(PICO_TINYUSB_PATH ${CMAKE_CURRENT_LIST_DIR}/libs/tinyusb CACHE PATH "Path to custom TinyUSB")
+
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
@@ -40,6 +43,13 @@ file(GLOB_RECURSE SRC_FILES "src/*.cpp")
 # Add executable. Default name is the project name, version 0.1
 add_executable(pico-rig ${SRC_FILES} )
 
+# Add target definitions to overwrite the SDK defaults explicitly
+target_compile_definitions(pico-rig PRIVATE
+	CFG_TUD_ENABLED=1
+	CFG_TUD_CDC=1
+	CFG_TUD_AUDIO=1
+)
+
 pico_set_program_name(pico-rig "pico-rig")
 pico_set_program_version(pico-rig "0.1")
 
@@ -51,6 +61,8 @@ pico_enable_stdio_usb(pico-rig 1)
 target_link_libraries(pico-rig
 	pico_stdlib
 	hardware_psram
+	tinyusb_device
+	tinyusb_additions
 )
 
 # Add the standard include files to the build

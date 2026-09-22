@@ -15,7 +15,7 @@
 				"CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
 				"CMAKE_C_COMPILER": "/home/jeremy/.pico-sdk/toolchain/15_2_Rel1/bin/arm-none-eabi-gcc",
 				"CMAKE_CXX_COMPILER": "/home/jeremy/.pico-sdk/toolchain/15_2_Rel1/bin/arm-none-eabi-g++",
-				"Python3_EXECUTABLE": "/bin/python"
+				"Python3_EXECUTABLE": "/bin/python3"
 			}
 		},
 		{
