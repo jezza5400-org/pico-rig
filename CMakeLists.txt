@@ -23,8 +23,8 @@ if (EXISTS ${picoVscode})
 	include(${picoVscode})
 endif()
 # ====================================================================================
-# set(PICO_BOARD pico2 CACHE STRING "Board type")
-set(PICO_BOARD pimoroni_pico_plus2_w_rp2350 CACHE STRING "Board type")
+set(PICO_BOARD pico2 CACHE STRING "Board type")
+#set(PICO_BOARD pimoroni_pico_plus2_w_rp2350 CACHE STRING "Board type")
 
 # Use latest TinyUSB
 set(PICO_TINYUSB_PATH ${CMAKE_CURRENT_LIST_DIR}/libs/tinyusb CACHE PATH "Path to custom TinyUSB")
