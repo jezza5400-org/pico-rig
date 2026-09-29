@@ -1,11 +1,18 @@
 #include "audio.h"
 #include <cstdint>
 
+#include <tusb.h>
+#include "class/cdc/cdc_device.h"
+
 #include "usb_audio.h"
 #include "hardware/pwm.h"
 #include "hardware/adc.h"
 
 uint8_t rx_audio[96];
+uint8_t previous_line_state = 0;
+bool line_state_initialized = false;
+
+bool dts_high = false;
 
 void init_audio()
 {
@@ -34,6 +41,16 @@ void init_audio()
 
 void process_audio() 
 {
+        uint8_t line_state = tud_cdc_get_line_state();
+        if (!line_state_initialized || line_state != previous_line_state)
+        {
+        	previous_line_state = line_state;
+        	line_state_initialized = true;
+
+            dts_high = (line_state & 0x01) != 0; // Update dts_high based on DTR state
+        }
+	
+
 		// PC -> Pico / radio TX audio
 		if (usb_audio_out_streaming())
 		{
@@ -44,7 +61,10 @@ void process_audio()
 
 			if (count > 0)
 			{
-				// Using Analog pin 26 (GP29) for audio output to the radio.
+				// Only process audio if DTS is high
+				if(dts_high)
+                {
+                    // Using Analog pin 26 (GP29) for audio output to the radio.
 				for (uint16_t i = 0; i < count; ++i)
 				{
                     // Convert 8-bit unsigned audio to 12-bit unsigned audio for PWM output.
@@ -61,6 +81,7 @@ void process_audio()
                         gpio_put(27, false); // Set PTT low
                     }
 				}
+                }
 			}
 		}
 
@@ -69,7 +90,6 @@ void process_audio()
 		{
 			uint8_t tx_audio[96];
 
-			// Generate sin wave audio for testing.
 			for (uint16_t i = 0; i < sizeof(tx_audio); ++i)
 			{
                 //TODO: FIX THIS ASS IMPLEMNTAION, THIS WILL GIVE DISTORTION
