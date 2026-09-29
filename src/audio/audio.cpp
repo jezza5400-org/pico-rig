@@ -62,26 +62,24 @@ void process_audio()
 			if (count > 0)
 			{
 				// Only process audio if DTS is high
-				if(dts_high)
-                {
-                    // Using Analog pin 26 (GP29) for audio output to the radio.
+                gpio_put(27, dts_high); // Set PTT based on DTS state
+
+                // Using Analog pin 26 (GP29) for audio output to the radio.
 				for (uint16_t i = 0; i < count; ++i)
 				{
                     // Convert 8-bit unsigned audio to 12-bit unsigned audio for PWM output.
                     uint16_t pwm_value =
                         static_cast<uint16_t>(
                             static_cast<float>(rx_audio[i]) / 255.0f * 4095.0f);
-
                     // Write the PWM value to the pin.
                     pwm_set_gpio_level(26, pwm_value);
-
                     if (rx_audio[i] > 128) {
                         gpio_put(27, true); // Set PTT high
                     } else {
                         gpio_put(27, false); // Set PTT low
                     }
 				}
-                }
+                
 			}
 		}
 
