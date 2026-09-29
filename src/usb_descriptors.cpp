@@ -23,7 +23,8 @@ tusb_desc_device_t const desc_device = {
 	.iProduct = 0x02,
 	.iSerialNumber = 0x03,
 
-	.bNumConfigurations = 0x01};
+	.bNumConfigurations = 0x01
+};
 
 extern "C" uint8_t const *tud_descriptor_device_cb(void) {
 	return (uint8_t const *)&desc_device;

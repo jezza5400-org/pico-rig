@@ -61,6 +61,7 @@ pico_enable_stdio_usb(pico-rig 0)
 target_link_libraries(pico-rig
 	pico_stdlib
 	hardware_psram
+	hardware_pwm
 	tinyusb_device
 	tinyusb_additions
 )
