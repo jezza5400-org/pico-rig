@@ -1,8 +1,7 @@
 #include "audio.h"
-#include <cmath>
 #include <cstdint>
 
-#include "pico/stdlib.h"
+#include "usb_audio.h"
 #include "hardware/pwm.h"
 #include "hardware/adc.h"
 

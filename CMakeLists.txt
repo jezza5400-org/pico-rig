@@ -37,8 +37,11 @@ project(pico-rig C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-# Automatically find all .cpp files inside the src directory tree
-file(GLOB_RECURSE SRC_FILES "src/*.cpp")
+# Automatically find all source files inside the src directory tree
+file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
+	"src/*.c"
+	"src/*.cpp"
+)
 
 # Add executable. Default name is the project name, version 0.1
 add_executable(pico-rig ${SRC_FILES} )
