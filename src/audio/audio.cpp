@@ -18,6 +18,12 @@ void init_audio()
     uint slice_num = pwm_gpio_to_slice_num(26);
     pwm_set_wrap(slice_num, 4095); // 12-bit resolution
     pwm_set_enabled(slice_num, true);
+
+    // Initialize GPIO pin 27 for ptt output
+    gpio_init(27);
+    gpio_set_dir(27, true);
+    gpio_set_function(27, GPIO_FUNC_SIO);
+    gpio_put(27, false); // Set PTT low initially
 }
 
 void process_audio() 
@@ -42,6 +48,12 @@ void process_audio()
 
                     // Write the PWM value to the pin.
                     pwm_set_gpio_level(26, pwm_value);
+
+                    if (rx_audio[i] > 128) {
+                        gpio_put(27, true); // Set PTT high
+                    } else {
+                        gpio_put(27, false); // Set PTT low
+                    }
 				}
 			}
 		}
