@@ -62,6 +62,7 @@ target_link_libraries(pico-rig
 	pico_stdlib
 	hardware_psram
 	hardware_pwm
+	hardware_adc
 	tinyusb_device
 	tinyusb_additions
 )

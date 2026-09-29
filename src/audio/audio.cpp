@@ -4,11 +4,14 @@
 
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
+#include "hardware/adc.h"
 
 uint8_t rx_audio[96];
 
 void init_audio()
 {
+    adc_init();
+
     // Initialize GPIO pin 26 for PWM output.
     gpio_init(26);
     gpio_set_dir(26, true);
@@ -24,6 +27,10 @@ void init_audio()
     gpio_set_dir(27, true);
     gpio_set_function(27, GPIO_FUNC_SIO);
     gpio_put(27, false); // Set PTT low initially
+
+    // Read from GPIO 28 for ADC input (microphone input)
+    adc_gpio_init(28);
+    adc_select_input(2); // GPIO 28 corresponds to ADC input 2
 }
 
 void process_audio() 
@@ -66,11 +73,12 @@ void process_audio()
 			// Generate sin wave audio for testing.
 			for (uint16_t i = 0; i < sizeof(tx_audio); ++i)
 			{
-				tx_audio[i] =
-					static_cast<uint8_t>(
-						127.0f * sinf(
-							2.0f * 3.14159f * 440.0f * i / 48000.0f) + 128.0f); // 440 Hz sine wave at 48 kHz sample rate.
-			}
+                //TODO: FIX THIS ASS IMPLEMNTAION, THIS WILL GIVE DISTORTION
+                const float conversion_factor = 3.3f / (1 << 12);
+                uint16_t result = adc_read();
+
+                tx_audio[i] = static_cast<uint8_t>(result * conversion_factor * 255.0f / 3.3f);
+            }
 
 			usb_audio_write(
 				tx_audio,
