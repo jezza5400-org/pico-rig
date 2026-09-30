@@ -1,0 +1,12 @@
+Checks: >
+  bugprone-*,
+  performance-*,
+  readability-*,
+  modernize-*,
+  -modernize-use-trailing-return-type
+
+WarningsAsErrors: ''
+
+HeaderFilterRegex: '^(?!.*(lib/tinyusb|pico-sdk)).*'
+
+FormatStyle: file

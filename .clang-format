@@ -1,0 +1,52 @@
+BasedOnStyle: LLVM
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: ForContinuationAndIndentation
+
+ColumnLimit: 150
+
+InsertNewlineAtEOF: true
+
+BreakBeforeBraces: Custom
+
+BraceWrapping:
+  AfterFunction: false
+  AfterClass: false
+  AfterStruct: false
+  AfterEnum: false
+  AfterNamespace: false
+  AfterControlStatement: Never
+
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+SpaceBeforeParens: ControlStatements
+
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+
+# Prevent massive vertical alignment gaps
+AlignConsecutiveAssignments:
+  Enabled: false
+
+AlignConsecutiveDeclarations:
+  Enabled: false
+
+# Don't align '\' in multi-line macros
+AlignEscapedNewlines: DontAlign
+
+AlignArrayOfStructures: None
+
+# Keep initialiser lists readable
+Cpp11BracedListStyle: true
+BinPackArguments: false
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: false
+
+# Don't collapse small blocks
+AllowShortBlocksOnASingleLine: Never
+AllowShortEnumsOnASingleLine: false
+
+# Avoid strange indentation after brackets
+AlignAfterOpenBracket: BlockIndent

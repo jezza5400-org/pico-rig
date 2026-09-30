@@ -1,105 +1,121 @@
 #include "audio.h"
+
 #include <cstdint>
 
-#include <tusb.h>
 #include "class/cdc/cdc_device.h"
+#include <tusb.h>
+
+#include "hardware/adc.h"
+#include "hardware/pwm.h"
 
 #include "usb_audio.h"
-#include "hardware/pwm.h"
-#include "hardware/adc.h"
 
 uint8_t rx_audio[96];
+
 uint8_t previous_line_state = 0;
+
 bool line_state_initialized = false;
 
-bool dts_high = false;
+bool dtr_high = false;
 
-void init_audio()
-{
-    adc_init();
+void init_audio() {
+	adc_init();
 
-    // Initialize GPIO pin 26 for PWM output.
-    gpio_init(26);
-    gpio_set_dir(26, true);
-    gpio_set_function(26, GPIO_FUNC_PWM);
+	// PWM audio output GPIO26
 
-    // Set up PWM frequency and duty cycle.
-    uint slice_num = pwm_gpio_to_slice_num(26);
-    pwm_set_wrap(slice_num, 4095); // 12-bit resolution
-    pwm_set_enabled(slice_num, true);
+	gpio_init(26);
+	gpio_set_dir(26, true);
+	gpio_set_function(26, GPIO_FUNC_PWM);
 
-    // Initialize GPIO pin 27 for ptt output
-    gpio_init(27);
-    gpio_set_dir(27, true);
-    gpio_set_function(27, GPIO_FUNC_SIO);
-    gpio_put(27, false); // Set PTT low initially
+	uint slice_num = pwm_gpio_to_slice_num(26);
 
-    // Read from GPIO 28 for ADC input (microphone input)
-    adc_gpio_init(28);
-    adc_select_input(2); // GPIO 28 corresponds to ADC input 2
+	// 10-bit PWM
+	// 125MHz / (1023 + 1) = ~122kHz PWM carrier
+
+	pwm_set_wrap(slice_num, 1023);
+	pwm_set_enabled(slice_num, true);
+
+	// 50% duty cycle -> audio silence
+	pwm_set_gpio_level(26, 512);
+
+	// PTT GPIO27
+
+	gpio_init(27);
+	gpio_set_dir(27, true);
+	gpio_set_function(27, GPIO_FUNC_SIO);
+
+	gpio_put(27, false);
+
+	// ADC input GPIO28
+
+	adc_gpio_init(28);
+
+	adc_select_input(2);
 }
 
-void process_audio() 
-{
-        uint8_t line_state = tud_cdc_get_line_state();
-        if (!line_state_initialized || line_state != previous_line_state)
-        {
-        	previous_line_state = line_state;
-        	line_state_initialized = true;
+void process_audio() {
+	uint8_t line_state = tud_cdc_get_line_state();
 
-            dts_high = (line_state & 0x01) != 0; // Update dts_high based on DTR state
-        }
-	
+	if (!line_state_initialized || line_state != previous_line_state) {
+		previous_line_state = line_state;
 
-		// PC -> Pico / radio TX audio
-		if (usb_audio_out_streaming())
-		{
-			uint16_t count =
-				usb_audio_read(
-					rx_audio,
-					sizeof(rx_audio));
+		line_state_initialized = true;
 
-			if (count > 0)
-			{
-				// Only process audio if DTS is high
-                gpio_put(27, dts_high); // Set PTT based on DTS state
+		dtr_high = (line_state & 0x01) != 0;
+	}
 
-                // Using Analog pin 26 (GP29) for audio output to the radio.
-				for (uint16_t i = 0; i < count; ++i)
-				{
-                    // Convert 8-bit unsigned audio to 12-bit unsigned audio for PWM output.
-                    uint16_t pwm_value =
-                        static_cast<uint16_t>(
-                            static_cast<float>(rx_audio[i]) / 255.0f * 4095.0f);
-                    // Write the PWM value to the pin.
-                    pwm_set_gpio_level(26, pwm_value);
-                    if (rx_audio[i] > 128) {
-                        gpio_put(27, true); // Set PTT high
-                    } else {
-                        gpio_put(27, false); // Set PTT low
-                    }
-				}
-                
+	//
+	// PC -> Pico -> Radio TX
+	//
+
+	if (usb_audio_out_streaming()) {
+
+		uint16_t count = usb_audio_read(rx_audio, sizeof(rx_audio));
+
+		if (count >= 2) {
+
+			gpio_put(27, dtr_high);
+
+			for (uint16_t i = 0; i < count; i += 2) {
+
+				// USB audio is S16_LE
+
+				int16_t sample = static_cast<int16_t>(static_cast<uint16_t>(rx_audio[i]) | (static_cast<uint16_t>(rx_audio[i + 1]) << 8));
+
+				// Convert:
+				// -32768 -> 0 PWM
+				//      0 -> 512 PWM
+				// +32767 -> 1023 PWM
+				uint16_t pwm_value = static_cast<uint16_t>((static_cast<int32_t>(sample) + 32768) >> 6);
+
+				pwm_set_gpio_level(26, pwm_value);
 			}
 		}
+	}
 
-		// Pico / radio RX audio -> PC
-		if (usb_audio_in_streaming())
-		{
-			uint8_t tx_audio[96];
+	//
+	// Radio RX -> Pico -> PC
+	//
 
-			for (uint16_t i = 0; i < sizeof(tx_audio); ++i)
-			{
-                //TODO: FIX THIS ASS IMPLEMNTAION, THIS WILL GIVE DISTORTION
-                const float conversion_factor = 3.3f / (1 << 12);
-                uint16_t result = adc_read();
+	if (usb_audio_in_streaming()) {
 
-                tx_audio[i] = static_cast<uint8_t>(result * conversion_factor * 255.0f / 3.3f);
-            }
+		int16_t tx_audio[48];
 
-			usb_audio_write(
-				tx_audio,
-				sizeof(tx_audio));
+		for (int i = 0; i < 48; i++) {
+
+			uint16_t adc_value = adc_read();
+
+			// ADC:
+			//
+			// 0      -> negative audio
+			// 2048   -> silence
+			// 4095   -> positive audio
+
+			int16_t sample = static_cast<int16_t>((static_cast<int32_t>(adc_value) - 2048) << 4);
+
+			tx_audio[i] = sample;
 		}
 
+		usb_audio_write(reinterpret_cast<uint8_t*>(tx_audio), sizeof(tx_audio));
+	}
 }

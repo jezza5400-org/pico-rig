@@ -2,13 +2,11 @@
 #include <cstdint>
 #include <tusb.h>
 
-int main()
-{
+int main() {
 	tusb_init();
 	init_audio();
 
-	while (true)
-	{
+	while (true) {
 		tud_task();
 
 		process_audio();
