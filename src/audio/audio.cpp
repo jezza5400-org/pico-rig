@@ -3,8 +3,10 @@
 #include <cstdint>
 
 #include "class/cdc/cdc_device.h"
+#include <hardware/uart.h>
 #include <tusb.h>
 
+#include "pico/cyw43_arch.h"
 #include "hardware/adc.h"
 #include "hardware/pwm.h"
 
@@ -42,15 +44,17 @@ void init_audio() {
 
 	gpio_init(27);
 	gpio_set_dir(27, true);
-	gpio_set_function(27, GPIO_FUNC_SIO);
-
-	gpio_put(27, false);
+	gpio_put(27, true);
 
 	// ADC input GPIO28
 
 	adc_gpio_init(28);
-
 	adc_select_input(2);
+
+	// LED SETUP
+	gpio_init(CYW43_WL_GPIO_LED_PIN);
+	gpio_set_dir(CYW43_WL_GPIO_LED_PIN, true);
+	gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 }
 
 void process_audio() {
@@ -58,31 +62,26 @@ void process_audio() {
 
 	if (!line_state_initialized || line_state != previous_line_state) {
 		previous_line_state = line_state;
-
 		line_state_initialized = true;
-
 		dtr_high = (line_state & 0x01) != 0;
 	}
+	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, dtr_high);
+	gpio_put(27, dtr_high);
 
-	//
 	// PC -> Pico -> Radio TX
-	//
-
 	if (usb_audio_out_streaming()) {
 
 		uint16_t count = usb_audio_read(rx_audio, sizeof(rx_audio));
 
 		if (count >= 2) {
 
-			gpio_put(27, dtr_high);
 
 			for (uint16_t i = 0; i < count; i += 2) {
 
 				// USB audio is S16_LE
-
 				int16_t sample = static_cast<int16_t>(static_cast<uint16_t>(rx_audio[i]) | (static_cast<uint16_t>(rx_audio[i + 1]) << 8));
 
-				// Convert:
+				// Convsert:
 				// -32768 -> 0 PWM
 				//      0 -> 512 PWM
 				// +32767 -> 1023 PWM
@@ -93,10 +92,7 @@ void process_audio() {
 		}
 	}
 
-	//
 	// Radio RX -> Pico -> PC
-	//
-
 	if (usb_audio_in_streaming()) {
 
 		int16_t tx_audio[48];

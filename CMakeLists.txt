@@ -23,7 +23,7 @@ if (EXISTS ${picoVscode})
 	include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico2 CACHE STRING "Board type")
+set(PICO_BOARD pico2_w CACHE STRING "Board type")
 #set(PICO_BOARD pimoroni_pico_plus2_w_rp2350 CACHE STRING "Board type")
 
 # Use latest TinyUSB
@@ -63,6 +63,7 @@ pico_enable_stdio_usb(pico-rig 0)
 # Add the standard library to the build
 target_link_libraries(pico-rig
 	pico_stdlib
+	pico_cyw43_arch_none
 	hardware_psram
 	hardware_pwm
 	hardware_adc
